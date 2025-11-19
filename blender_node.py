@@ -49,8 +49,17 @@ def get_default_blender_path():
 class BlenderRenderNode:
     @classmethod
     def INPUT_TYPES(cls):
+        # Get available blend files
+        node_dir = os.path.dirname(os.path.abspath(__file__))
+        blend_files = [f for f in os.listdir(node_dir) if f.endswith('.blend')]
+
+        # If no blend files found, provide a default option
+        if not blend_files:
+            blend_files = ["untitled.blend"]
+
         return {
             "required": {
+                "blend_file": (blend_files, {"default": blend_files[0]}),
                 "diffuse_texture": ("IMAGE",),
                 "normal_texture": ("IMAGE",),
                 "roughness_texture": ("IMAGE",),
@@ -73,20 +82,20 @@ class BlenderRenderNode:
         import time
         return str(time.time())  # Always return a unique value
 
-    def render(self, diffuse_texture, normal_texture, roughness_texture, specular_texture, use_gpu=True, samples=128, use_denoising=True, adaptive_sampling=True):
+    def render(self, blend_file, diffuse_texture, normal_texture, roughness_texture, specular_texture, use_gpu=True, samples=128, use_denoising=True, adaptive_sampling=True):
         # Get paths relative to the node directory
         node_dir = os.path.dirname(os.path.abspath(__file__))
         script_path = os.path.join(node_dir, "blender_render_script.py")
-        
+
         # Use the auto-detected Blender path
         blender_path = get_default_blender_path()
         if not blender_path or not os.path.exists(blender_path):
             raise FileNotFoundError(f"Blender executable not found. Expected at: {blender_path}")
-        
-        # Use the bundled blend file
-        blend_file = os.path.join(node_dir, "untitled.blend")
-        if not os.path.exists(blend_file):
-            raise FileNotFoundError(f"Blender scene file not found at: {blend_file}")
+
+        # Use the selected blend file
+        blend_file_path = os.path.join(node_dir, blend_file)
+        if not os.path.exists(blend_file_path):
+            raise FileNotFoundError(f"Blender scene file not found at: {blend_file_path}")
         
         # Generate unique output filename with timestamp
         import time
@@ -124,16 +133,16 @@ class BlenderRenderNode:
                 texture_paths[tex_name] = tex_path
                 print(f"Saved {tex_name} texture to: {tex_path}")
 
-            # Prepare command following Linux guide approach: 
+            # Prepare command following Linux guide approach:
             # subprocess.run([blender_path, "-b", "-P", script_path])
             cmd = [
                 blender_path,
                 "-b",  # Background mode (no GUI)
-                blend_file,  # .blend file to open
+                blend_file_path,  # .blend file to open
                 "-P", script_path,  # Python script to execute
                 "--",  # Separator for script arguments
                 texture_paths["diffuse"],
-                texture_paths["normal"], 
+                texture_paths["normal"],
                 texture_paths["roughness"],
                 texture_paths["specular"],
                 output_path,
