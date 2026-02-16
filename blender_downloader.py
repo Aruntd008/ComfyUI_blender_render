@@ -56,7 +56,10 @@ def download_blender(node_dir):
     download_path = os.path.join(node_dir, filename)
     
     try:
-        urllib.request.urlretrieve(url, download_path)
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req) as response, open(download_path, 'wb') as out_file:
+            import shutil
+            shutil.copyfileobj(response, out_file)
         print(f"Downloaded: {filename}")
         
         # Extract
