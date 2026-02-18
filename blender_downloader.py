@@ -8,10 +8,10 @@ import zipfile
 import tarfile
 
 # Simple configuration - only Windows and Linux
-BLENDER_VERSION = "4.5.3"
+BLENDER_VERSION = "5.0.1"
 DOWNLOAD_URLS = {
-    "Windows": f"https://mirror.freedif.org/blender/release/Blender4.5/blender-{BLENDER_VERSION}-windows-x64.zip",
-    "Linux": f"https://mirror.freedif.org/blender/release/Blender4.5/blender-{BLENDER_VERSION}-linux-x64.tar.xz"
+    "Windows": f"https://mirror.freedif.org/blender/release/Blender5.0/blender-{BLENDER_VERSION}-windows-x64.zip",
+    "Linux": f"https://mirror.freedif.org/blender/release/Blender5.0/blender-{BLENDER_VERSION}-linux-x64.tar.xz"
 }
 
 # Use shorter names for easier access (following Linux guide recommendation)
