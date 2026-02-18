@@ -8,7 +8,6 @@ ComfyUI Blender Render Node — production-safe for Docker / RunPod.
 import os
 import subprocess
 import time
-import platform
 import tempfile
 import shutil
 
@@ -18,36 +17,16 @@ from PIL import Image
 
 
 def get_default_blender_path():
-    """Get Blender executable path using relative paths."""
-    node_dir = os.path.dirname(os.path.abspath(__file__))
-
-    try:
-        from .blender_downloader import get_blender_path
-        return get_blender_path(node_dir)
-    except Exception as e:
-        print(f"[BlenderRender] Auto-downloader failed: {e}")
-
-    system = platform.system()
-    if system == "Windows":
-        blender_path = os.path.join(node_dir, "blender-5.0.1-windows-x64", "blender.exe")
-    elif system == "Linux":
-        blender_path = os.path.join(node_dir, "blender", "blender")
-    else:
-        raise RuntimeError(f"Unsupported platform: {system}")
-
-    if os.path.exists(blender_path):
-        if system == "Linux" and not os.access(blender_path, os.X_OK):
-            try:
-                os.chmod(blender_path, 0o755)
-                print(f"[BlenderRender] Fixed executable permissions: {blender_path}")
-            except OSError:
-                pass
-        return blender_path
-    else:
+    """Get Blender executable path from system PATH."""
+    blender_path = shutil.which("blender")
+    if not blender_path:
         raise FileNotFoundError(
-            f"Blender not found at: {blender_path}. "
-            f"Check auto-download or manually place Blender in the 'blender' folder."
+            "Blender executable not found on system PATH. "
+            "Please install Blender and ensure it is available in your PATH "
+            "(e.g. `apt install blender` or add it to your Dockerfile)."
         )
+    print(f"[BlenderRender] Using system Blender: {blender_path}")
+    return blender_path
 
 
 class BlenderRenderNode:
@@ -90,10 +69,6 @@ class BlenderRenderNode:
 
         # ── Resolve Blender executable ──────────────────────────
         blender_path = get_default_blender_path()
-        if not blender_path or not os.path.exists(blender_path):
-            raise FileNotFoundError(
-                f"Blender executable not found. Expected at: {blender_path}"
-            )
 
         # ── Resolve .blend scene ────────────────────────────────
         blend_file_path = os.path.join(node_dir, blend_file)
